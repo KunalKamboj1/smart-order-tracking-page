@@ -61,6 +61,21 @@ const getShopifyHeaders = () => {
     };
   }
   
+  // If no shop parameter is found, check localStorage
+  const storedShop = localStorage.getItem('shopify-shop-domain');
+  if (storedShop) {
+    return {
+      'X-Shopify-Shop-Domain': storedShop
+    };
+  }
+  
+  // If we're on the tracking page, use a default test store
+  if (window.location.pathname.includes('/tracking')) {
+    return {
+      'X-Shopify-Shop-Domain': 'smart-order-tracking.myshopify.com'
+    };
+  }
+  
   return {};
 };
 

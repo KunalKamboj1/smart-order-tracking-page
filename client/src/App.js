@@ -24,13 +24,19 @@ const queryClient = new QueryClient({
 const getAppConfig = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const host = urlParams.get('host');
+  const shop = urlParams.get('shop');
+  
+  // Store shop domain in localStorage when available
+  if (shop) {
+    localStorage.setItem('shopify-shop-domain', shop);
+  }
   
   // Only return config if we have a valid Shopify host
   if (host) {
     return {
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY || '',
       host: host,
-      shop: urlParams.get('shop') || '',
+      shop: shop || localStorage.getItem('shopify-shop-domain') || '',
     };
   }
   

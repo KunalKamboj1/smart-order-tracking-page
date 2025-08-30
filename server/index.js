@@ -74,6 +74,17 @@ app.use(express.urlencoded({ extended: true }));
 
 // Apply Shopify middleware routes
   if (shopifyAppInstance && typeof shopifyAppInstance === 'object') {
+    // Custom middleware to handle missing shop parameter for auth
+    app.use('/api/auth', (req, res, next) => {
+      if (!req.query.shop) {
+        // If no shop parameter, check if we have a default or test shop
+        const defaultShop = process.env.DEFAULT_SHOP || 'smart-order-tracking.myshopify.com';
+        console.log('⚠️ No shop provided in auth request, using default:', defaultShop);
+        req.query.shop = defaultShop;
+      }
+      next();
+    });
+    
     // Apply auth middleware
     app.use('/api/auth', shopifyAppInstance.auth.begin());
     app.use('/api/auth/callback', shopifyAppInstance.auth.callback());
