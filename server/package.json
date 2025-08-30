@@ -2,10 +2,10 @@
   "name": "smart-order-tracking-server",
   "version": "1.0.0",
   "description": "Backend server for Smart Order Tracking Shopify app",
-  "main": "simple-server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node simple-server.js",
-    "dev": "nodemon simple-server.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "test": "jest",
     "lint": "eslint ."
   },
@@ -19,7 +19,9 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "@shopify/shopify-api": "^7.7.0",
+    "@shopify/shopify-api": "^10.0.0",
+    "@shopify/shopify-app-express": "^5.0.20",
+    "@shopify/shopify-app-session-storage-sqlite": "^3.0.0",
     "axios": "^1.11.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
