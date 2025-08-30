@@ -7,7 +7,23 @@ const helmet = require('helmet');
 const compression = require('compression');
 
 require('@shopify/shopify-api/adapters/node');
-require('dotenv').config({ path: process.env.NODE_ENV === 'production' ? '../.env.production' : '../.env' });
+// Load environment variables
+if (process.env.NODE_ENV === 'production') {
+  require('dotenv').config({ path: '../.env.production' });
+} else {
+  require('dotenv').config({ path: '../.env' });
+}
+
+// Fallback for Render deployment - load production env if no NODE_ENV is set
+if (!process.env.SHOPIFY_API_KEY) {
+  require('dotenv').config({ path: '../.env.production' });
+}
+
+// Debug logging for environment variables
+console.log('Environment check:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('SHOPIFY_API_KEY exists:', !!process.env.SHOPIFY_API_KEY);
+console.log('HOST:', process.env.HOST);
 
 const PORT = process.env.PORT || 3001;
 
