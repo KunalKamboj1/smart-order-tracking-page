@@ -41,13 +41,43 @@ export const apiEndpoints = {
   health: () => `${API_BASE_URL}/health`,
 };
 
+// Helper function to get Shopify session data
+const getShopifyHeaders = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const shop = urlParams.get('shop');
+  const host = urlParams.get('host');
+  
+  // Try to get from App Bridge if available
+  if (window.shopifyApp && window.shopifyApp.getState) {
+    const state = window.shopifyApp.getState();
+    if (state.shop) {
+      return {
+        'X-Shopify-Shop-Domain': state.shop,
+        'X-Shopify-Access-Token': state.accessToken || ''
+      };
+    }
+  }
+  
+  // Fallback to URL parameters
+  if (shop) {
+    return {
+      'X-Shopify-Shop-Domain': shop,
+      'X-Shopify-Host': host || ''
+    };
+  }
+  
+  return {};
+};
+
 // HTTP client with error handling
 export const apiClient = {
   async get(url, options = {}) {
+    const shopifyHeaders = getShopifyHeaders();
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...shopifyHeaders,
         ...options.headers,
       },
       ...options,
@@ -61,10 +91,12 @@ export const apiClient = {
   },
   
   async post(url, data, options = {}) {
+    const shopifyHeaders = getShopifyHeaders();
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...shopifyHeaders,
         ...options.headers,
       },
       body: JSON.stringify(data),
@@ -79,10 +111,12 @@ export const apiClient = {
   },
   
   async put(url, data, options = {}) {
+    const shopifyHeaders = getShopifyHeaders();
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...shopifyHeaders,
         ...options.headers,
       },
       body: JSON.stringify(data),
@@ -97,10 +131,12 @@ export const apiClient = {
   },
   
   async delete(url, options = {}) {
+    const shopifyHeaders = getShopifyHeaders();
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        ...shopifyHeaders,
         ...options.headers,
       },
       ...options,

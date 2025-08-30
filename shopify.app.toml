@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-name = "smart-order-tracking-page-builder"
+name = "smart-order-tracking"
 client_id = "896734937b1d23f2d7e4191de83f41c6"
 application_url = "https://smartordertracking.netlify.app"
 embedded = true
@@ -20,10 +20,7 @@ api_version = "2023-10"
 [pos]
 embedded = false
 
-[[extensions]]
-type = "theme_app_extension"
-name = "tracking-page"
-handle = "tracking-page"
+
 
 [build]
 automatically_update_urls_on_dev = true

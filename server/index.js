@@ -150,7 +150,7 @@ const demoOrders = [
 ];
 
 // Helper function to get session from request
-function getSessionFromRequest(req, res) {
+async function getSessionFromRequest(req, res) {
   // Try to get from Shopify app session (res.locals is set by shopify middleware)
   if (res?.locals?.shopify?.session) {
     const session = res.locals.shopify.session;
@@ -176,6 +176,23 @@ function getSessionFromRequest(req, res) {
     return { shop, accessToken };
   }
   
+  // Try to get access token from database if we have shop domain
+  if (shop) {
+    try {
+      const Database = require('./models/Database');
+      await Database.init();
+      const shopData = await Database.getShopData(shop);
+      if (shopData && shopData.access_token) {
+        return {
+          shop: shop,
+          accessToken: shopData.access_token
+        };
+      }
+    } catch (error) {
+      console.error('Error retrieving shop data from database:', error);
+    }
+  }
+  
   return { shop: null, accessToken: null };
 }
 
@@ -183,7 +200,7 @@ function getSessionFromRequest(req, res) {
 // Orders endpoint
 app.get('/api/orders', async (req, res) => {
   try {
-    const { shop, accessToken } = getSessionFromRequest(req, res);
+    const { shop, accessToken } = await getSessionFromRequest(req, res);
     
     if (!shop || !accessToken) {
       console.log('⚠️ No valid Shopify session found, returning demo orders');
@@ -212,7 +229,7 @@ app.get('/api/orders', async (req, res) => {
 // Analytics endpoint
 app.get('/api/analytics', async (req, res) => {
   try {
-    const { shop, accessToken } = getSessionFromRequest(req, res);
+    const { shop, accessToken } = await getSessionFromRequest(req, res);
     const days = parseInt(req.query.days) || 30;
     
     if (!shop || !accessToken) {
@@ -252,7 +269,7 @@ app.get('/api/analytics', async (req, res) => {
 app.post('/api/orders/lookup', async (req, res) => {
   try {
     const { order_number, contact_info } = req.body;
-    const { shop, accessToken } = getSessionFromRequest(req, res);
+    const { shop, accessToken } = await getSessionFromRequest(req, res);
     
     if (!order_number || !contact_info) {
       return res.status(400).json({

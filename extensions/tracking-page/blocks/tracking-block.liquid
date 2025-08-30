@@ -188,10 +188,10 @@
     font-weight: {{ block.settings.button_font_weight }};
     cursor: pointer;
     transition: all 0.2s;
-    {% if not block.settings.button_full_width %}
+    {% unless block.settings.button_full_width %}
       display: block;
       margin: 0 auto;
-    {% endif %}
+    {% endunless %}
   }
 
   .tracking-block-submit-btn:hover {
@@ -336,7 +336,6 @@
 {
   "name": "Order Tracking Block",
   "target": "section",
-  "available_if": "{{ app.metafields.tracking.tracking_block_enabled == 'true' }}",
   "settings": [
     {
       "type": "header",
@@ -362,58 +361,12 @@
     },
     {
       "type": "text",
-      "id": "order_placeholder",
-      "label": "Order number placeholder",
-      "default": "e.g., #1001"
-    },
-    {
-      "type": "text",
-      "id": "contact_label",
-      "label": "Contact field label",
-      "default": "Email or Phone"
-    },
-    {
-      "type": "text",
-      "id": "contact_placeholder",
-      "label": "Contact field placeholder",
-      "default": "email@example.com or phone"
-    },
-    {
-      "type": "text",
       "id": "button_text",
       "label": "Button text",
       "default": "Track Order"
     },
     {
       "type": "text",
-      "id": "loading_text",
-      "label": "Loading text",
-      "default": "Searching..."
-    },
-    {
-      "type": "header",
-      "content": "Messages"
-    },
-    {
-      "type": "text",
-      "id": "success_message",
-      "label": "Success message",
-      "default": "Your tracking information:"
-    },
-    {
-      "type": "textarea",
-      "id": "not_dispatched_message",
-      "label": "Not dispatched message",
-      "default": "Your order has not been dispatched yet. We will notify you once it ships."
-    },
-    {
-      "type": "text",
-      "id": "error_title",
-      "label": "Error title",
-      "default": "Order Not Found"
-    },
-    {
-      "type": "textarea",
       "id": "error_message",
       "label": "Error message",
       "default": "We could not find an order with those details. Please check your information and try again."
@@ -454,64 +407,6 @@
     },
     {
       "type": "header",
-      "content": "Spacing"
-    },
-    {
-      "type": "range",
-      "id": "margin_top",
-      "label": "Top margin (px)",
-      "min": 0,
-      "max": 100,
-      "step": 5,
-      "default": 20
-    },
-    {
-      "type": "range",
-      "id": "margin_bottom",
-      "label": "Bottom margin (px)",
-      "min": 0,
-      "max": 100,
-      "step": 5,
-      "default": 20
-    },
-    {
-      "type": "range",
-      "id": "padding_top",
-      "label": "Top padding (px)",
-      "min": 0,
-      "max": 100,
-      "step": 5,
-      "default": 20
-    },
-    {
-      "type": "range",
-      "id": "padding_bottom",
-      "label": "Bottom padding (px)",
-      "min": 0,
-      "max": 100,
-      "step": 5,
-      "default": 20
-    },
-    {
-      "type": "range",
-      "id": "padding_horizontal",
-      "label": "Horizontal padding (px)",
-      "min": 0,
-      "max": 100,
-      "step": 5,
-      "default": 20
-    },
-    {
-      "type": "range",
-      "id": "inner_padding",
-      "label": "Inner padding (px)",
-      "min": 10,
-      "max": 60,
-      "step": 5,
-      "default": 30
-    },
-    {
-      "type": "header",
       "content": "Colors"
     },
     {
@@ -534,36 +429,6 @@
     },
     {
       "type": "color",
-      "id": "subtitle_color",
-      "label": "Subtitle color",
-      "default": "#666666"
-    },
-    {
-      "type": "color",
-      "id": "label_color",
-      "label": "Label color",
-      "default": "#333333"
-    },
-    {
-      "type": "color",
-      "id": "input_text_color",
-      "label": "Input text color",
-      "default": "#1a1a1a"
-    },
-    {
-      "type": "color",
-      "id": "input_background",
-      "label": "Input background",
-      "default": "#ffffff"
-    },
-    {
-      "type": "color",
-      "id": "input_border_color",
-      "label": "Input border color",
-      "default": "#e1e5e9"
-    },
-    {
-      "type": "color",
       "id": "button_text_color",
       "label": "Button text color",
       "default": "#ffffff"
@@ -580,47 +445,6 @@
       "max": 48,
       "step": 2,
       "default": 28
-    },
-    {
-      "type": "select",
-      "id": "title_weight",
-      "label": "Title font weight",
-      "options": [
-        { "value": "400", "label": "Normal" },
-        { "value": "500", "label": "Medium" },
-        { "value": "600", "label": "Semi Bold" },
-        { "value": "700", "label": "Bold" }
-      ],
-      "default": "600"
-    },
-    {
-      "type": "range",
-      "id": "subtitle_size",
-      "label": "Subtitle font size (px)",
-      "min": 12,
-      "max": 24,
-      "step": 1,
-      "default": 16
-    },
-    {
-      "type": "range",
-      "id": "label_size",
-      "label": "Label font size (px)",
-      "min": 12,
-      "max": 20,
-      "step": 1,
-      "default": 14
-    },
-    {
-      "type": "select",
-      "id": "label_weight",
-      "label": "Label font weight",
-      "options": [
-        { "value": "400", "label": "Normal" },
-        { "value": "500", "label": "Medium" },
-        { "value": "600", "label": "Semi Bold" }
-      ],
-      "default": "500"
     },
     {
       "type": "range",
@@ -641,56 +465,17 @@
       "default": 16
     },
     {
-      "type": "select",
-      "id": "button_font_weight",
-      "label": "Button font weight",
-      "options": [
-        { "value": "400", "label": "Normal" },
-        { "value": "500", "label": "Medium" },
-        { "value": "600", "label": "Semi Bold" }
-      ],
-      "default": "500"
-    },
-    {
       "type": "header",
-      "content": "Form Styling"
+      "content": "Styling"
     },
     {
       "type": "range",
-      "id": "input_padding",
-      "label": "Input padding (px)",
-      "min": 8,
-      "max": 20,
-      "step": 2,
-      "default": 12
-    },
-    {
-      "type": "range",
-      "id": "input_border_width",
-      "label": "Input border width (px)",
-      "min": 1,
-      "max": 4,
-      "step": 1,
-      "default": 2
-    },
-    {
-      "type": "range",
-      "id": "input_border_radius",
-      "label": "Input border radius (px)",
+      "id": "border_radius",
+      "label": "Border radius (px)",
       "min": 0,
       "max": 20,
       "step": 2,
-      "default": 6
-    },
-    {
-      "type": "checkbox",
-      "id": "show_focus_shadow",
-      "label": "Show focus shadow on inputs",
-      "default": true
-    },
-    {
-      "type": "header",
-      "content": "Button Styling"
+      "default": 8
     },
     {
       "type": "checkbox",
@@ -699,171 +484,10 @@
       "default": true
     },
     {
-      "type": "range",
-      "id": "button_padding_vertical",
-      "label": "Button vertical padding (px)",
-      "min": 8,
-      "max": 20,
-      "step": 2,
-      "default": 14
-    },
-    {
-      "type": "range",
-      "id": "button_padding_horizontal",
-      "label": "Button horizontal padding (px)",
-      "min": 16,
-      "max": 40,
-      "step": 4,
-      "default": 24
-    },
-    {
-      "type": "range",
-      "id": "button_border_radius",
-      "label": "Button border radius (px)",
-      "min": 0,
-      "max": 20,
-      "step": 2,
-      "default": 6
-    },
-    {
-      "type": "checkbox",
-      "id": "button_hover_transform",
-      "label": "Button hover animation",
-      "default": true
-    },
-    {
-      "type": "header",
-      "content": "Border & Shadow"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_border",
-      "label": "Show border",
-      "default": false
-    },
-    {
-      "type": "range",
-      "id": "border_width",
-      "label": "Border width (px)",
-      "min": 1,
-      "max": 4,
-      "step": 1,
-      "default": 1
-    },
-    {
-      "type": "color",
-      "id": "border_color",
-      "label": "Border color",
-      "default": "#e5e7eb"
-    },
-    {
-      "type": "range",
-      "id": "border_radius",
-      "label": "Container border radius (px)",
-      "min": 0,
-      "max": 20,
-      "step": 2,
-      "default": 8
-    },
-    {
       "type": "checkbox",
       "id": "show_shadow",
       "label": "Show shadow",
       "default": true
-    },
-    {
-      "type": "range",
-      "id": "shadow_blur",
-      "label": "Shadow blur (px)",
-      "min": 2,
-      "max": 20,
-      "step": 2,
-      "default": 10
-    },
-    {
-      "type": "range",
-      "id": "shadow_spread",
-      "label": "Shadow spread (px)",
-      "min": 0,
-      "max": 10,
-      "step": 1,
-      "default": 0
-    },
-    {
-      "type": "range",
-      "id": "shadow_opacity",
-      "label": "Shadow opacity (%)",
-      "min": 5,
-      "max": 50,
-      "step": 5,
-      "default": 10
-    },
-    {
-      "type": "header",
-      "content": "Result States"
-    },
-    {
-      "type": "range",
-      "id": "result_border_radius",
-      "label": "Result card border radius (px)",
-      "min": 0,
-      "max": 20,
-      "step": 2,
-      "default": 8
-    },
-    {
-      "type": "color",
-      "id": "success_background",
-      "label": "Success background",
-      "default": "#f0f9ff"
-    },
-    {
-      "type": "color",
-      "id": "success_border",
-      "label": "Success border",
-      "default": "#0ea5e9"
-    },
-    {
-      "type": "color",
-      "id": "success_text",
-      "label": "Success text",
-      "default": "#0c4a6e"
-    },
-    {
-      "type": "color",
-      "id": "warning_background",
-      "label": "Warning background",
-      "default": "#fefce8"
-    },
-    {
-      "type": "color",
-      "id": "warning_border",
-      "label": "Warning border",
-      "default": "#eab308"
-    },
-    {
-      "type": "color",
-      "id": "warning_text",
-      "label": "Warning text",
-      "default": "#a16207"
-    },
-    {
-      "type": "color",
-      "id": "error_background",
-      "label": "Error background",
-      "default": "#fef2f2"
-    },
-    {
-      "type": "color",
-      "id": "error_border",
-      "label": "Error border",
-      "default": "#ef4444"
-    },
-    {
-      "type": "color",
-      "id": "error_text",
-      "label": "Error text",
-      "default": "#dc2626"
     },
     {
       "type": "header",
@@ -883,53 +507,12 @@
     },
     {
       "type": "range",
-      "id": "recommended_title_size",
-      "label": "Recommended title size (px)",
-      "min": 16,
-      "max": 32,
-      "step": 2,
-      "default": 20
-    },
-    {
-      "type": "range",
       "id": "recommended_products_count",
       "label": "Number of products to show",
       "min": 2,
       "max": 12,
       "step": 1,
       "default": 4
-    },
-    {
-      "type": "range",
-      "id": "product_card_width",
-      "label": "Product card minimum width (px)",
-      "min": 120,
-      "max": 200,
-      "step": 10,
-      "default": 150
-    },
-    {
-      "type": "range",
-      "id": "product_gap",
-      "label": "Gap between products (px)",
-      "min": 8,
-      "max": 32,
-      "step": 4,
-      "default": 16
-    }
-  ],
-  "presets": [
-    {
-      "name": "Order Tracking Block",
-      "settings": {
-        "show_title": true,
-        "title": "Track Your Order",
-        "layout": "vertical",
-        "text_alignment": "center",
-        "primary_color": "#000000",
-        "background_color": "#ffffff",
-        "show_shadow": true
-      }
     }
   ]
 }

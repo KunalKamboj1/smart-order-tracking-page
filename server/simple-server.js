@@ -581,6 +581,19 @@ app.get('/auth/callback', async (req, res) => {
     const tokenData = await tokenResponse.json();
     console.log('✅ Access token obtained for shop:', shop);
     
+    // Store access token in database
+    try {
+      const Database = require('./models/Database');
+      await Database.init();
+      await Database.storeShopData(shop, tokenData.access_token, {
+        name: shop,
+        email: null
+      });
+      console.log('✅ Access token stored in database for shop:', shop);
+    } catch (dbError) {
+      console.error('❌ Error storing access token:', dbError);
+    }
+    
     // Redirect to frontend with success
     const frontendUrl = process.env.FRONTEND_URL || 'https://tracking-app-frontend.loca.lt';
     res.redirect(`${frontendUrl}?shop=${shop}&installed=true`);
