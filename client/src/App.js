@@ -40,40 +40,59 @@ const getAppConfig = () => {
 function App() {
   const config = getAppConfig();
 
-  const AppContent = () => (
-    <QueryClientProvider client={queryClient}>
-      <AppProvider
-        i18n={{
-          Polaris: {
-            Common: {
-              checkbox: 'checkbox',
-            },
-            ResourceList: {
-              sortingLabel: 'Sort by',
-              defaultItemSingular: 'item',
-              defaultItemPlural: 'items',
-              showing: 'Showing {itemsCount} {resource}',
-              Item: {
-                viewItem: 'View details for {itemName}',
+  const AppContent = () => {
+    // Check if running in Shopify admin (embedded mode)
+    const isEmbedded = config !== null;
+    
+    return (
+      <QueryClientProvider client={queryClient}>
+        <AppProvider
+          i18n={{
+            Polaris: {
+              Common: {
+                checkbox: 'checkbox',
+              },
+              ResourceList: {
+                sortingLabel: 'Sort by',
+                defaultItemSingular: 'item',
+                defaultItemPlural: 'items',
+                showing: 'Showing {itemsCount} {resource}',
+                Item: {
+                  viewItem: 'View details for {itemName}',
+                },
               },
             },
-          },
-        }}
-      >
-        <Router>
-          <AppFrame>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-            </Routes>
-          </AppFrame>
-        </Router>
-      </AppProvider>
-    </QueryClientProvider>
-  );
+          }}
+        >
+          <Router>
+            {isEmbedded ? (
+              // Embedded mode - no AppFrame, direct content
+              <div style={{ padding: '20px' }}>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                </Routes>
+              </div>
+            ) : (
+              // Standalone mode - full AppFrame
+              <AppFrame>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                </Routes>
+              </AppFrame>
+            )}
+          </Router>
+        </AppProvider>
+      </QueryClientProvider>
+    );
+  };
 
   // If we have a valid Shopify config, wrap with AppBridge
   if (config) {
