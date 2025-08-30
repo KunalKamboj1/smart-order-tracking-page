@@ -43,9 +43,7 @@ const Analytics = () => {
       
       if (data.success) {
         // Use the raw analytics data from backend without transformations
-          setAnalyticsData(data.analytics);
-        
-        setAnalyticsData(transformedData);
+        setAnalyticsData(data.analytics);
       } else {
         setError(data.error || 'Failed to fetch analytics data');
         // Fallback to mock data structure with zeros
