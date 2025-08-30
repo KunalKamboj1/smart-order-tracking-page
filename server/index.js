@@ -87,10 +87,19 @@ app.use(express.urlencoded({ extended: true }));
     // Ensure shop parameter is present for all API routes
     app.use('/api/*', (req, res, next) => {
       const shop = req.query.shop || req.headers['x-shopify-shop-domain'];
+      
+      // Skip validation for auth routes and health check
+      if (req.path.startsWith('/api/auth') || req.path === '/api/health') {
+        return next();
+      }
+      
       if (!shop) {
-        return res.status(400).json({ 
+        console.log('⚠️ No shop parameter provided for path:', req.path);
+        // Instead of 400 error, redirect to auth
+        return res.status(401).json({ 
           success: false, 
-          error: 'Shop parameter is required' 
+          error: 'Shop parameter is required',
+          redirectUrl: '/api/auth'
         });
       }
       next();
@@ -107,6 +116,7 @@ async function getSessionFromRequest(req, res) {
   // Try to get from Shopify app session (res.locals is set by shopify middleware)
   if (res?.locals?.shopify?.session) {
     const session = res.locals.shopify.session;
+    console.log('✅ Found session in res.locals.shopify');
     return {
       shop: session.shop,
       accessToken: session.accessToken
@@ -115,35 +125,43 @@ async function getSessionFromRequest(req, res) {
   
   // Try to get from request session
   if (req.session?.shop && req.session?.accessToken) {
+    console.log('✅ Found session in req.session');
     return {
       shop: req.session.shop,
       accessToken: req.session.accessToken
     };
   }
   
-  // Try to get from headers
+  // Try to get from headers or query parameters
   const shop = req.headers['x-shopify-shop-domain'] || req.query.shop;
   const accessToken = req.headers['x-shopify-access-token'] || req.query.access_token;
   
   if (shop && accessToken) {
+    console.log('✅ Found shop and accessToken in headers/query');
     return { shop, accessToken };
   }
   
   // Try to get access token from database if we have shop domain
   if (shop) {
     try {
+      console.log('🔍 Looking up shop in database:', shop);
       const Database = require('./models/Database');
       await Database.init();
       const shopData = await Database.getShopData(shop);
       if (shopData && shopData.access_token) {
+        console.log('✅ Found shop data in database');
         return {
           shop: shop,
           accessToken: shopData.access_token
         };
+      } else {
+        console.log('❌ Shop found but no access token in database');
       }
     } catch (error) {
-      console.error('Error retrieving shop data from database:', error);
+      console.error('❌ Error retrieving shop data from database:', error);
     }
+  } else {
+    console.log('❌ No shop parameter found in request');
   }
   
   return { shop: null, accessToken: null };
@@ -293,7 +311,12 @@ app.use('/api/tracking', require('./routes/tracking'));
 
 // Root route - redirect to auth with query parameters preserved
 app.get('/', (req, res) => {
-  const queryString = Object.keys(req.query).length > 0 ? '?' + new URLSearchParams(req.query).toString() : '';
+  // Ensure we have a shop parameter for the auth redirect
+  const params = new URLSearchParams(req.query);
+  if (!params.has('shop') && req.headers['x-shopify-shop-domain']) {
+    params.set('shop', req.headers['x-shopify-shop-domain']);
+  }
+  const queryString = params.toString() ? `?${params.toString()}` : '';
   res.redirect(`/api/auth${queryString}`);
 });
 
