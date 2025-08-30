@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from '@shopify/polaris';
-import { Provider as AppBridgeProvider } from '@shopify/app-bridge-react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import '@shopify/polaris/build/esm/styles.css';
 
@@ -94,16 +93,7 @@ function App() {
     );
   };
 
-  // If we have a valid Shopify config, wrap with AppBridge
-  if (config) {
-    return (
-      <AppBridgeProvider config={config}>
-        <AppContent />
-      </AppBridgeProvider>
-    );
-  }
-
-  // For local development, render without AppBridge
+  // App Bridge v4 handles configuration automatically via script tag
   return <AppContent />;
 }
 

@@ -65,9 +65,18 @@ if (shopifyAppInstance && typeof shopifyAppInstance === 'object') {
   // Apply webhook processing with empty handlers for now
   app.use('/api/webhooks', shopifyAppInstance.processWebhooks({ webhookHandlers: {} }));
   
-  // Apply session validation middleware for protected routes
-  app.use('/api/orders', shopifyAppInstance.validateAuthenticatedSession());
-  app.use('/api/analytics', shopifyAppInstance.validateAuthenticatedSession());
+  // Apply session validation middleware conditionally
+  // Only validate authentication when shop parameter is provided
+  const conditionalAuth = (req, res, next) => {
+    const shop = req.query.shop || req.headers['x-shopify-shop-domain'];
+    if (shop) {
+      return shopifyAppInstance.validateAuthenticatedSession()(req, res, next);
+    }
+    next();
+  };
+  
+  app.use('/api/orders', conditionalAuth);
+  app.use('/api/analytics', conditionalAuth);
 }
 
 // Import services
