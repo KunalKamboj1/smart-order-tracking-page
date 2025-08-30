@@ -8,17 +8,7 @@
     <meta name="description" content="Smart Order Tracking - Shopify App Admin Interface" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <meta name="shopify-api-key" content="%REACT_APP_SHOPIFY_API_KEY%" />
-    <script>
-      // Set shop parameter for App Bridge from URL or use default
-      const urlParams = new URLSearchParams(window.location.search);
-      const shop = urlParams.get('shop') || 'demo-shop.myshopify.com';
-      const shopMeta = document.createElement('meta');
-      shopMeta.name = 'shopify-shop';
-      shopMeta.content = shop;
-      document.head.appendChild(shopMeta);
-    </script>
-    <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+
     <title>Smart Order Tracking Admin</title>
   </head>
   <body>
