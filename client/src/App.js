@@ -28,9 +28,9 @@ const getAppConfig = () => {
   // Only return config if we have a valid Shopify host
   if (host) {
     return {
-      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY || 'demo-api-key',
+      apiKey: process.env.REACT_APP_SHOPIFY_API_KEY || '',
       host: host,
-      shop: urlParams.get('shop') || 'demo-shop.myshopify.com',
+      shop: urlParams.get('shop') || '',
     };
   }
   

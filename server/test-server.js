@@ -64,7 +64,7 @@ app.get('/api/settings', (req, res) => {
     status: 'OK', 
     message: 'Settings retrieved',
     data: {
-      storeName: 'Demo Store',
+      storeName: '',
       brandColor: '#6366f1',
       trackingPageUrl: '/tracking',
       emailNotifications: true

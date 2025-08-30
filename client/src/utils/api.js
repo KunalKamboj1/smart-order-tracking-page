@@ -3,13 +3,8 @@
 
 // Get the base API URL from environment variables
 const getApiBaseUrl = () => {
-  // In production, use the environment variable
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_API_BASE_URL || '/api';
-  }
-  
-  // In development, use localhost with fallback
-  return process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api';
+  // Always use production backend URL
+  return 'https://shopify-tracking-backend.onrender.com/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

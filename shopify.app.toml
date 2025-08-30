@@ -2,7 +2,7 @@
 
 name = "smart-order-tracking"
 client_id = "896734937b1d23f2d7e4191de83f41c6"
-application_url = "https://smartordertracking.netlify.app"
+application_url = "https://smartordertracking.netlify.app/"
 embedded = true
 
 [access_scopes]
