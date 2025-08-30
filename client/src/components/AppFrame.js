@@ -39,15 +39,36 @@ const AppFrame = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Mock user data
-  const user = {
-    name: 'John Smith',
-    email: 'john@example.com',
-    store: 'My Awesome Store',
+  // Fetch real user data from Shopify API
+  const [user, setUser] = useState({
+    name: '',
+    email: '',
+    store: '',
     avatar: null,
-    plan: 'Basic',
-    notifications: 3,
-  };
+    plan: '',
+    notifications: 0,
+  });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/shopify/user');
+        const data = await response.json();
+        setUser({
+          name: data.name || '',
+          email: data.email || '',
+          store: data.storeName || '',
+          avatar: data.avatar || null,
+          plan: data.plan || '',
+          notifications: data.notifications || 0,
+        });
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   // Navigation items
   const navigationItems = [
@@ -63,7 +84,7 @@ const AppFrame = ({ children }) => {
       label: 'Orders',
       icon: OrdersMajor,
       selected: location.pathname === '/orders',
-      badge: '24',
+      badge: null,
     },
     {
       url: '/analytics',
@@ -258,9 +279,9 @@ const AppFrame = ({ children }) => {
         items={[
           {
             label: 'View Store',
-            icon: StoreMajor,
-            url: 'https://your-store.myshopify.com',
-            external: true,
+          icon: StoreMajor,
+          url: user.store ? `https://${user.store}.myshopify.com` : '#',
+          external: true,
           },
           {
             label: 'Shopify Admin',

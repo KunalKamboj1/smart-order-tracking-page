@@ -98,56 +98,7 @@ if (shopifyAppInstance && typeof shopifyAppInstance === 'object') {
 // Import services
 const shopifyService = require('./services/shopifyService');
 
-// Demo data for fallback
-const demoOrders = [
-  {
-    id: 1001,
-    order_number: '1001',
-    name: '#1001',
-    email: 'customer@example.com',
-    created_at: '2024-01-15T10:30:00Z',
-    financial_status: 'paid',
-    fulfillment_status: 'fulfilled',
-    total_price: '99.99',
-    currency: 'USD',
-    line_items: [{
-      title: 'Premium Headphones',
-      quantity: 1,
-      price: '99.99'
-    }],
-    shipping_address: {
-      city: 'New York',
-      country: 'United States'
-    },
-    fulfillments: [{
-      tracking_number: 'TRK123456789',
-      tracking_company: 'UPS',
-      status: 'delivered'
-    }]
-  },
-  {
-    id: 1002,
-    order_number: '1002',
-    name: '#1002',
-    email: 'john@example.com',
-    created_at: '2024-01-16T14:20:00Z',
-    financial_status: 'paid',
-    fulfillment_status: 'partial',
-    total_price: '149.50',
-    currency: 'USD'
-  },
-  {
-    id: 1003,
-    order_number: '1003',
-    name: '#1003',
-    email: 'sarah@example.com',
-    created_at: '2024-01-17T09:15:00Z',
-    financial_status: 'pending',
-    fulfillment_status: null,
-    total_price: '45.00',
-    currency: 'USD'
-  }
-];
+// No demo data - all data will come from Shopify API
 
 // Helper function to get session from request
 async function getSessionFromRequest(req, res) {
@@ -203,8 +154,11 @@ app.get('/api/orders', async (req, res) => {
     const { shop, accessToken } = await getSessionFromRequest(req, res);
     
     if (!shop || !accessToken) {
-      console.log('⚠️ No valid Shopify session found, returning demo orders');
-      return res.json({ orders: demoOrders });
+      console.log('⚠️ No valid Shopify session found');
+      return res.status(401).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
     }
     
     const options = {
@@ -279,24 +233,11 @@ app.post('/api/orders/lookup', async (req, res) => {
     }
     
     if (!shop || !accessToken) {
-      console.log('⚠️ No valid Shopify session found, using demo data for order lookup');
-      const demoOrder = demoOrders.find(order => 
-        order.order_number.toString() === order_number.toString() && 
-        order.email.toLowerCase() === contact_info.toLowerCase()
-      );
-      
-      if (demoOrder) {
-        return res.json({
-          success: true,
-          order: demoOrder,
-          message: 'Order found (demo data)'
-        });
-      } else {
-        return res.status(404).json({
-          success: false,
-          error: 'Order not found with the provided information'
-        });
-      }
+      console.log('⚠️ No valid Shopify session found');
+      return res.status(401).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
     }
     
     const result = await shopifyService.findOrderByNumberAndContact(

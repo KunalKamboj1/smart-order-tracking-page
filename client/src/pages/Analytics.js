@@ -42,47 +42,8 @@ const Analytics = () => {
       const data = await response.json();
       
       if (data.success) {
-        // Transform backend data to match frontend expectations
-        const transformedData = {
-          overview: {
-            totalLookups: data.analytics.overview.totalOrders,
-            successfulLookups: data.analytics.overview.fulfilledOrders,
-            uniqueVisitors: data.analytics.overview.totalOrders, // Using orders as proxy
-            pageViews: Math.round(data.analytics.overview.totalOrders * 1.2), // Estimated
-            averageSessionDuration: '2:34', // Static for now
-            bounceRate: 23.4, // Static for now
-            conversionRate: data.analytics.overview.fulfillmentRate,
-            mobileTraffic: 67.8, // Static for now
-          },
-          trends: {
-            dailyLookups: data.analytics.trends.map(trend => ({
-              date: trend.date,
-              lookups: trend.orders,
-              successful: Math.round(trend.orders * (data.analytics.overview.fulfillmentRate / 100))
-            }))
-          },
-          topCarriers: [
-            { carrier: 'Shopify Shipping', orders: Math.round(data.analytics.overview.totalOrders * 0.4), percentage: 40.0 },
-            { carrier: 'External Carriers', orders: Math.round(data.analytics.overview.totalOrders * 0.6), percentage: 60.0 }
-          ],
-          orderStatuses: data.analytics.orderStatuses.map(status => ({
-            status: status.status,
-            count: status.count,
-            percentage: status.percentage
-          })),
-          deviceBreakdown: [
-            { device: 'Mobile', visits: Math.round(data.analytics.overview.totalOrders * 0.678), percentage: 67.8 },
-            { device: 'Desktop', visits: Math.round(data.analytics.overview.totalOrders * 0.253), percentage: 25.3 },
-            { device: 'Tablet', visits: Math.round(data.analytics.overview.totalOrders * 0.069), percentage: 6.9 }
-          ],
-          topCountries: [
-            { country: 'United States', visits: Math.round(data.analytics.overview.totalOrders * 0.7), flag: '🇺🇸' },
-            { country: 'Canada', visits: Math.round(data.analytics.overview.totalOrders * 0.15), flag: '🇨🇦' },
-            { country: 'United Kingdom', visits: Math.round(data.analytics.overview.totalOrders * 0.08), flag: '🇬🇧' },
-            { country: 'Australia', visits: Math.round(data.analytics.overview.totalOrders * 0.04), flag: '🇦🇺' },
-            { country: 'Germany', visits: Math.round(data.analytics.overview.totalOrders * 0.03), flag: '🇩🇪' }
-          ]
-        };
+        // Use the raw analytics data from backend without transformations
+          setAnalyticsData(data.analytics);
         
         setAnalyticsData(transformedData);
       } else {
@@ -136,56 +97,7 @@ const Analytics = () => {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  // Mock analytics data structure (now replaced with real data)
-  const mockAnalyticsData = {
-    overview: {
-      totalLookups: 2847,
-      successfulLookups: 2456,
-      uniqueVisitors: 1923,
-      pageViews: 3421,
-      averageSessionDuration: '2:34',
-      bounceRate: 23.4,
-      conversionRate: 86.3,
-      mobileTraffic: 67.8,
-    },
-    trends: {
-      dailyLookups: [
-        { date: '2024-01-01', lookups: 89, successful: 76 },
-        { date: '2024-01-02', lookups: 124, successful: 108 },
-        { date: '2024-01-03', lookups: 156, successful: 134 },
-        { date: '2024-01-04', lookups: 98, successful: 87 },
-        { date: '2024-01-05', lookups: 167, successful: 145 },
-        { date: '2024-01-06', lookups: 203, successful: 178 },
-        { date: '2024-01-07', lookups: 189, successful: 162 },
-      ],
-    },
-    topCarriers: [
-      { carrier: 'FedEx', orders: 456, percentage: 32.1 },
-      { carrier: 'UPS', orders: 389, percentage: 27.4 },
-      { carrier: 'DHL', orders: 234, percentage: 16.5 },
-      { carrier: 'USPS', orders: 198, percentage: 13.9 },
-      { carrier: 'Other', orders: 143, percentage: 10.1 },
-    ],
-    orderStatuses: [
-      { status: 'Delivered', count: 1234, percentage: 43.4 },
-      { status: 'In Transit', count: 876, percentage: 30.8 },
-      { status: 'Processing', count: 456, percentage: 16.0 },
-      { status: 'Pending', count: 234, percentage: 8.2 },
-      { status: 'Exception', count: 47, percentage: 1.6 },
-    ],
-    deviceBreakdown: [
-      { device: 'Mobile', visits: 1304, percentage: 67.8 },
-      { device: 'Desktop', visits: 487, percentage: 25.3 },
-      { device: 'Tablet', visits: 132, percentage: 6.9 },
-    ],
-    topCountries: [
-      { country: 'United States', visits: 1456, flag: '🇺🇸' },
-      { country: 'Canada', visits: 234, flag: '🇨🇦' },
-      { country: 'United Kingdom', visits: 123, flag: '🇬🇧' },
-      { country: 'Australia', visits: 89, flag: '🇦🇺' },
-      { country: 'Germany', visits: 67, flag: '🇩🇪' },
-    ],
-  };
+
 
   const dateRangeOptions = [
     { label: 'Last 7 days', value: '7' },

@@ -47,37 +47,23 @@ app.get('/api/analytics', async (req, res) => {
     const { days = 30 } = req.query;
     
     if (!shop || !accessToken) {
-      console.log('⚠️ No valid Shopify session found, returning demo analytics for testing');
-      // Return demo analytics data
-      return res.json({
-        success: true,
-        analytics: {
-          overview: {
-            totalOrders: demoOrders.length,
-            fulfilledOrders: demoOrders.filter(order => order.fulfillment_status === 'fulfilled').length,
-            partiallyFulfilledOrders: demoOrders.filter(order => order.fulfillment_status === 'partial').length,
-            unfulfilledOrders: demoOrders.filter(order => order.fulfillment_status === null || order.fulfillment_status === 'unfulfilled').length,
-            totalRevenue: demoOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0),
-            fulfillmentRate: demoOrders.length > 0 ? Math.round((demoOrders.filter(order => order.fulfillment_status === 'fulfilled').length / demoOrders.length * 100) * 100) / 100 : 0,
-            averageOrderValue: demoOrders.length > 0 ? Math.round((demoOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0) / demoOrders.length) * 100) / 100 : 0,
-            period: `${days} days`
-          },
-          orderStatuses: [
-            { status: 'Fulfilled', count: demoOrders.filter(order => order.fulfillment_status === 'fulfilled').length, percentage: 50 },
-            { status: 'Unfulfilled', count: demoOrders.filter(order => order.fulfillment_status === null || order.fulfillment_status === 'unfulfilled').length, percentage: 50 }
+      console.log('⚠️ No valid Shopify session found');
+      return res.status(401).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
           ],
-          financialStatuses: [
-            { status: 'Paid', count: demoOrders.filter(order => order.financial_status === 'paid').length, percentage: 100 }
-          ],
-          trends: Array.from({ length: parseInt(days) }, (_, i) => ({
-            date: new Date(Date.now() - (parseInt(days) - i - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            orders: Math.floor(Math.random() * 5) + 1
+          financialStatuses: Object.entries(financialStatuses).map(([status, count]) => ({
+            status: status.charAt(0).toUpperCase() + status.slice(1),
+            count,
+            percentage: totalOrders > 0 ? Math.round((count / totalOrders * 100) * 100) / 100 : 0
           })),
+          trends,
           summary: {
-            period: `Demo Data - ${days} days`,
-            totalOrders: demoOrders.length,
-            totalRevenue: demoOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0),
-            fulfillmentRate: demoOrders.length > 0 ? Math.round((demoOrders.filter(order => order.fulfillment_status === 'fulfilled').length / demoOrders.length * 100) * 100) / 100 : 0
+            period: `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
+            totalOrders,
+            totalRevenue,
+            fulfillmentRate
           }
         }
       });
@@ -193,25 +179,11 @@ app.post('/api/orders/lookup', async (req, res) => {
     }
     
     if (!shop || !accessToken) {
-      console.log('⚠️ No valid Shopify session found, using demo data for order lookup');
-      // Find order in demo data
-      const demoOrder = demoOrders.find(order => 
-        order.order_number.toString() === order_number.toString() && 
-        order.email.toLowerCase() === contact_info.toLowerCase()
-      );
-      
-      if (demoOrder) {
-        return res.json({
-          success: true,
-          order: demoOrder,
-          message: 'Order found (demo data)'
-        });
-      } else {
-        return res.status(404).json({
-          success: false,
-          error: 'Order not found with the provided information'
-        });
-      }
+      console.log('⚠️ No valid Shopify session found');
+      return res.status(401).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
     }
     
     const result = await shopifyService.findOrderByNumberAndContact(
@@ -436,8 +408,11 @@ app.get('/api/orders', async (req, res) => {
     const { shop, accessToken } = getSessionFromRequest(req);
     
     if (!shop || !accessToken) {
-      console.log('⚠️ No valid Shopify session found, returning demo orders for testing');
-      return res.json({ orders: demoOrders });
+      console.log('⚠️ No valid Shopify session found');
+      return res.status(401).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
     }
     
     const options = {
