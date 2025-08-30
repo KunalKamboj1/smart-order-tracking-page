@@ -31,7 +31,10 @@ const Dashboard = () => {
   // Fetch real orders from API
   const { data: orders = [], isLoading: ordersLoading, error: ordersError } = useQuery(
     'orders',
-    () => apiClient.get(apiEndpoints.orders.list()),
+    async () => {
+      const response = await apiClient.get(apiEndpoints.orders.list());
+      return response.orders || [];
+    },
     {
       refetchInterval: 30000, // Refetch every 30 seconds
       retry: 3,
