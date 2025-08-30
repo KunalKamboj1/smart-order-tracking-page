@@ -18,11 +18,9 @@ import {
   DropZone,
   List,
   Divider,
-  Badge,
   Toast,
   Frame,
 } from '@shopify/polaris';
-import { useState as useToast } from 'react';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState(0);

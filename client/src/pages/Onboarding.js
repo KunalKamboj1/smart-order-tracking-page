@@ -16,9 +16,6 @@ import {
   Icon,
 } from '@shopify/polaris';
 import {
-  CheckoutMinor,
-  SettingsMinor,
-  ViewMinor,
   CircleTickMajor,
 } from '@shopify/polaris-icons';
 import { useMutation, useQueryClient } from 'react-query';

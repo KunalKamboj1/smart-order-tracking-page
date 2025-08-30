@@ -8,24 +8,20 @@ import {
   DataTable,
   Select,
   Button,
-  ButtonGroup,
   Banner,
   ProgressBar,
   InlineStack,
   BlockStack,
   Divider,
   List,
-  Thumbnail,
   Icon,
 } from '@shopify/polaris';
 import {
   AnalyticsMajor,
   OrdersMajor,
-  CustomersMajor,
   ViewMajor,
   MobileMajor,
   DesktopMajor,
-  LocationMajor,
   CalendarMajor,
 } from '@shopify/polaris-icons';
 

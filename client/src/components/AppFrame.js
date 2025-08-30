@@ -8,7 +8,6 @@ import {
   Loading,
   ContextualSaveBar,
   Badge,
-  Icon,
   Text,
   InlineStack,
   BlockStack,
@@ -171,7 +170,7 @@ const AppFrame = ({ children }) => {
       setSearchActive(false);
       setSearchValue('');
     }
-  }, [searchValue]);
+  }, [searchValue, showToast]);
 
   const handleNavigationClick = useCallback((item) => {
     navigate(item.url);
