@@ -93,8 +93,9 @@ class OrderTracker {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        order_number: orderNumber,
-        contact_info: contactInfo
+        orderNumber: orderNumber,
+        email: contactInfo.includes('@') ? contactInfo : null,
+        phone: !contactInfo.includes('@') ? contactInfo : null
       })
     });
     

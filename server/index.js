@@ -87,7 +87,26 @@ app.use(express.urlencoded({ extended: true }));
     
     // Apply auth middleware
     app.use('/api/auth', shopifyAppInstance.auth.begin());
-    app.use('/api/auth/callback', shopifyAppInstance.auth.callback());
+    app.use('/api/auth/callback', shopifyAppInstance.auth.callback(), async (req, res, next) => {
+      // After successful OAuth, persist the access token to database
+      try {
+        const session = res.locals.shopify?.session;
+        if (session && session.shop && session.accessToken) {
+          console.log('💾 Persisting access token for shop:', session.shop);
+          const Database = require('./models/Database');
+          await Database.storeShopData(session.shop, session.accessToken, {
+            name: session.shop,
+            email: null // We don't have email from session
+          });
+          console.log('✅ Access token persisted successfully');
+        } else {
+          console.log('⚠️ No valid session found after OAuth callback');
+        }
+      } catch (error) {
+        console.error('❌ Error persisting access token:', error);
+      }
+      next();
+    });
     
     // Apply webhook processing with empty handlers for now
     app.use('/api/webhooks', shopifyAppInstance.processWebhooks({ webhookHandlers: {} }));
@@ -291,26 +310,7 @@ app.post('/api/orders/lookup', async (req, res) => {
   }
 });
 
-// Settings endpoints
-app.get('/api/settings', (req, res) => {
-  res.json({
-    trackingPageEnabled: true,
-    pageTitle: 'Track Your Order',
-    headerMessage: 'Enter your order details below to track your shipment',
-    trackingMessage: 'Your order is being processed and will be shipped soon.',
-    deliveredMessage: 'Your order has been delivered successfully!',
-    supportEmail: 'support@yourstore.com'
-  });
-});
-
-app.put('/api/settings', (req, res) => {
-  console.log('📝 Settings update received:', req.body);
-  res.json({
-    success: true,
-    message: 'Settings updated successfully',
-    settings: req.body
-  });
-});
+// Settings endpoints are handled by the routes/settings.js file
 
 // Legacy API Routes (for compatibility)
 app.use('/api/orders', require('./routes/orders'));

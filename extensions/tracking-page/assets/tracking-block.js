@@ -39,14 +39,15 @@ class TrackingBlock {
     this.hideResults();
 
     try {
-      const response = await fetch(`/apps/smart-order-tracking/api/tracking/lookup/${Shopify.shop}`, {
+      const response = await fetch(`/api/tracking/lookup/${Shopify.shop}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          order_number: orderNumber,
-          contact_info: contactInfo
+          orderNumber: orderNumber,
+          email: contactInfo.includes('@') ? contactInfo : null,
+          phone: !contactInfo.includes('@') ? contactInfo : null
         })
       });
 
