@@ -279,7 +279,7 @@ const Dashboard = () => {
                     Tracking Rate
                   </Text>
                   <Text variant="headingMd" as="p">
-                    {Math.round((mockStats.trackedOrders / mockStats.totalOrders) * 100)}%
+                    {stats.totalOrders > 0 ? Math.round((stats.trackedOrders / stats.totalOrders) * 100) : 0}%
                   </Text>
                 </BlockStack>
                 <BlockStack gap="100">
@@ -287,7 +287,7 @@ const Dashboard = () => {
                     Delivery Rate
                   </Text>
                   <Text variant="headingMd" as="p">
-                    {Math.round((mockStats.deliveredOrders / mockStats.trackedOrders) * 100)}%
+                    {stats.trackedOrders > 0 ? Math.round((stats.deliveredOrders / stats.trackedOrders) * 100) : 0}%
                   </Text>
                 </BlockStack>
               </BlockStack>
