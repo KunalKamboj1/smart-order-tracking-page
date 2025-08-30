@@ -163,6 +163,11 @@ const AppFrame = ({ children }) => {
     setSearchValue(value);
   }, []);
 
+  const showToast = useCallback((message) => {
+    setToastMessage(message);
+    setToastActive(true);
+  }, []);
+
   const handleSearchSubmit = useCallback(() => {
     if (searchValue.trim()) {
       // In a real app, this would perform search
@@ -176,11 +181,6 @@ const AppFrame = ({ children }) => {
     navigate(item.url);
     setMobileNavigationActive(false);
   }, [navigate]);
-
-  const showToast = useCallback((message) => {
-    setToastMessage(message);
-    setToastActive(true);
-  }, []);
 
   const handleSave = useCallback(() => {
     setIsLoading(true);
