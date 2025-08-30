@@ -21,60 +21,47 @@ import {
   ViewMajor,
 } from '@shopify/polaris-icons';
 import { useQuery } from 'react-query';
+import * as api from '../utils/api';
+
+const { apiClient, apiEndpoints } = api;
 
 const Dashboard = () => {
   const [selectedOrders, setSelectedOrders] = useState([]);
 
-  // Mock data for demonstration - in real app, this would come from API
-  const mockStats = {
-    totalOrders: 1247,
-    trackedOrders: 1089,
-    deliveredOrders: 956,
-    pendingOrders: 133,
+  // Fetch real orders from API
+  const { data: orders = [], isLoading: ordersLoading, error: ordersError } = useQuery(
+    'orders',
+    () => apiClient.get(apiEndpoints.orders.list()),
+    {
+      refetchInterval: 30000, // Refetch every 30 seconds
+      retry: 3,
+    }
+  );
+
+  // Calculate stats from real data
+  const stats = {
+    totalOrders: orders.length || 0,
+    trackedOrders: orders.filter(order => order.trackingNumber).length || 0,
+    deliveredOrders: orders.filter(order => order.fulfillmentStatus === 'fulfilled').length || 0,
+    pendingOrders: orders.filter(order => order.fulfillmentStatus === 'pending' || !order.fulfillmentStatus).length || 0,
   };
 
-  const mockRecentOrders = [
-    {
-      id: '1001',
-      orderNumber: '#SO-1001',
-      customer: 'John Smith',
-      status: 'In Transit',
-      trackingNumber: 'TRK123456789',
-      carrier: 'FedEx',
-      estimatedDelivery: '2024-01-25',
-      value: '$89.99',
-    },
-    {
-      id: '1002',
-      orderNumber: '#SO-1002',
-      customer: 'Sarah Johnson',
-      status: 'Delivered',
-      trackingNumber: 'TRK987654321',
-      carrier: 'UPS',
-      estimatedDelivery: '2024-01-23',
-      value: '$156.50',
-    },
-    {
-      id: '1003',
-      orderNumber: '#SO-1003',
-      customer: 'Mike Davis',
-      status: 'Processing',
-      trackingNumber: 'TRK456789123',
-      carrier: 'DHL',
-      estimatedDelivery: '2024-01-28',
-      value: '$234.75',
-    },
-    {
-      id: '1004',
-      orderNumber: '#SO-1004',
-      customer: 'Emily Wilson',
-      status: 'Shipped',
-      trackingNumber: 'TRK789123456',
-      carrier: 'USPS',
-      estimatedDelivery: '2024-01-26',
-      value: '$67.25',
-    },
-  ];
+  // Use real orders or fallback to empty array
+  const recentOrders = orders.slice(0, 5).map(order => ({
+    id: order.id,
+    orderNumber: order.name || `#${order.orderNumber}`,
+    customer: order.customer?.firstName && order.customer?.lastName 
+      ? `${order.customer.firstName} ${order.customer.lastName}`
+      : order.customer?.email || 'Unknown Customer',
+    status: order.fulfillmentStatus === 'fulfilled' ? 'Delivered' 
+          : order.fulfillmentStatus === 'partial' ? 'In Transit'
+          : order.fulfillmentStatus === 'restocked' ? 'Processing'
+          : order.trackingNumber ? 'Shipped' : 'Processing',
+    trackingNumber: order.trackingNumber || 'Not Available',
+    carrier: order.trackingCompany || 'N/A',
+    estimatedDelivery: order.estimatedDelivery || 'TBD',
+    value: order.totalPrice ? `$${parseFloat(order.totalPrice).toFixed(2)}` : '$0.00',
+  }));
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -86,7 +73,7 @@ const Dashboard = () => {
     return <Badge {...statusMap[status]} />;
   };
 
-  const tableRows = mockRecentOrders.map((order) => [
+  const tableRows = recentOrders.map((order) => [
     order.orderNumber,
     order.customer,
     getStatusBadge(order.status),
@@ -95,6 +82,42 @@ const Dashboard = () => {
     order.estimatedDelivery,
     order.value,
   ]);
+
+  // Handle loading and error states
+  if (ordersLoading) {
+    return (
+      <Page title="Dashboard">
+        <Layout>
+          <Layout.Section>
+            <Card sectioned>
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <Spinner size="large" />
+                <Text variant="bodyMd" as="p" color="subdued">
+                  Loading dashboard data...
+                </Text>
+              </div>
+            </Card>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    );
+  }
+
+  if (ordersError) {
+    return (
+      <Page title="Dashboard">
+        <Layout>
+          <Layout.Section>
+            <Banner status="critical">
+              <Text variant="bodyMd" as="p">
+                Failed to load dashboard data. Please check your connection and try again.
+              </Text>
+            </Banner>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    );
+  }
 
   const StatCard = ({ title, value, icon, trend }) => (
     <Card>
@@ -148,33 +171,33 @@ const Dashboard = () => {
             <Layout.Section oneQuarter>
               <StatCard
                 title="Total Orders"
-                value={mockStats.totalOrders.toLocaleString()}
+                value={stats.totalOrders.toLocaleString()}
                 icon={OrdersMajor}
-                trend={12}
+                trend={0}
               />
             </Layout.Section>
             <Layout.Section oneQuarter>
               <StatCard
                 title="Tracked Orders"
-                value={mockStats.trackedOrders.toLocaleString()}
+                value={stats.trackedOrders.toLocaleString()}
                 icon={CircleTickMajor}
-                trend={8}
+                trend={0}
               />
             </Layout.Section>
             <Layout.Section oneQuarter>
               <StatCard
                 title="Delivered"
-                value={mockStats.deliveredOrders.toLocaleString()}
+                value={stats.deliveredOrders.toLocaleString()}
                 icon={CircleTickMajor}
-                trend={15}
+                trend={0}
               />
             </Layout.Section>
             <Layout.Section oneQuarter>
               <StatCard
                 title="Pending"
-                value={mockStats.pendingOrders.toLocaleString()}
+                value={stats.pendingOrders.toLocaleString()}
                 icon={CircleAlertMajor}
-                trend={-3}
+                trend={0}
               />
             </Layout.Section>
           </Layout>
@@ -185,35 +208,54 @@ const Dashboard = () => {
             <div style={{padding: '16px'}}>
               <Text variant="headingLg" as="h2">Recent Orders</Text>
             </div>
-            <DataTable
-              columnContentTypes={[
-                'text',
-                'text',
-                'text',
-                'text',
-                'text',
-                'text',
-                'numeric',
-              ]}
-              headings={[
-                'Order',
-                'Customer',
-                'Status',
-                'Tracking Number',
-                'Carrier',
-                'Est. Delivery',
-                'Value',
-              ]}
-              rows={tableRows}
-              selectable
-              selectedRows={selectedOrders}
-              onSelectionChange={setSelectedOrders}
-            />
-            <div style={{padding: '16px'}}>
-              <InlineStack align="center">
-                <Button>View All Orders</Button>
-              </InlineStack>
-            </div>
+            {recentOrders.length > 0 ? (
+              <>
+                <DataTable
+                  columnContentTypes={[
+                    'text',
+                    'text',
+                    'text',
+                    'text',
+                    'text',
+                    'text',
+                    'numeric',
+                  ]}
+                  headings={[
+                    'Order',
+                    'Customer',
+                    'Status',
+                    'Tracking Number',
+                    'Carrier',
+                    'Est. Delivery',
+                    'Value',
+                  ]}
+                  rows={tableRows}
+                  selectable
+                  selectedRows={selectedOrders}
+                  onSelectionChange={setSelectedOrders}
+                />
+                <div style={{padding: '16px'}}>
+                  <InlineStack align="center">
+                    <Button>View All Orders</Button>
+                  </InlineStack>
+                </div>
+              </>
+            ) : (
+              <div style={{padding: '16px'}}>
+                <EmptyState
+                  heading="No orders found"
+                  action={{
+                    content: 'Refresh',
+                    onAction: () => window.location.reload(),
+                  }}
+                  image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+                >
+                  <Text variant="bodyMd" as="p">
+                    Your store doesn't have any orders yet, or there might be a connection issue.
+                  </Text>
+                </EmptyState>
+              </div>
+            )}
           </Card>
         </Layout.Section>
 
