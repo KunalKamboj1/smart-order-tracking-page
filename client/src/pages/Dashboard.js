@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Page,
   Layout,
@@ -22,11 +22,13 @@ import {
 } from '@shopify/polaris-icons';
 import { useQuery } from 'react-query';
 import * as api from '../utils/api';
+import TrackingDetails from '../components/TrackingDetails';
 
 const { apiClient, apiEndpoints } = api;
 
 const Dashboard = () => {
   const [selectedOrders, setSelectedOrders] = useState([]);
+  const [selectedOrderForTracking, setSelectedOrderForTracking] = useState(null);
 
   // Fetch real orders from API
   const { data: orders = [], isLoading: ordersLoading, error: ordersError } = useQuery(
@@ -80,7 +82,14 @@ const Dashboard = () => {
     order.orderNumber,
     order.customer,
     getStatusBadge(order.status),
-    order.trackingNumber,
+    order.trackingNumber !== 'Not Available' ? (
+      <Button
+        size="slim"
+        onClick={() => setSelectedOrderForTracking(orders.find(o => o.id === order.id))}
+      >
+        {order.trackingNumber}
+      </Button>
+    ) : order.trackingNumber,
     order.carrier,
     order.estimatedDelivery,
     order.value,
@@ -298,6 +307,13 @@ const Dashboard = () => {
           </Card>
         </Layout.Section>
       </Layout>
+      
+      {selectedOrderForTracking && (
+        <TrackingDetails
+          order={selectedOrderForTracking}
+          onClose={() => setSelectedOrderForTracking(null)}
+        />
+      )}
     </Page>
   );
 };

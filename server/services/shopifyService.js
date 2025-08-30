@@ -1,5 +1,6 @@
 const { shopifyApi } = require('@shopify/shopify-api');
 const { ApiVersion } = require('@shopify/shopify-api');
+require('@shopify/shopify-api/adapters/node');
 
 class ShopifyService {
   constructor() {

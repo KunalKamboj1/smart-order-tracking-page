@@ -37,7 +37,186 @@ app.get('/api/health', (req, res) => {
       host: process.env.HOST,
       frontendUrl: process.env.FRONTEND_URL
     }
-  });
+ });
+
+// Analytics endpoint - real data from Shopify orders
+app.get('/api/analytics', async (req, res) => {
+  try {
+    const { shop, accessToken } = getSessionFromRequest(req);
+    const { days = 30 } = req.query;
+    
+    if (!shop || !accessToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
+    }
+    
+    // Calculate date range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - parseInt(days));
+    
+    // Get orders for the specified period
+    const ordersResult = await shopifyService.getOrders(shop, accessToken, {
+      created_at_min: startDate.toISOString(),
+      created_at_max: endDate.toISOString(),
+      limit: 250,
+      status: 'any'
+    });
+    
+    if (!ordersResult.success) {
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch orders for analytics'
+      });
+    }
+    
+    const orders = ordersResult.orders || [];
+    
+    // Calculate analytics metrics
+    const totalOrders = orders.length;
+    const fulfilledOrders = orders.filter(order => order.fulfillment_status === 'fulfilled').length;
+    const partiallyFulfilledOrders = orders.filter(order => order.fulfillment_status === 'partial').length;
+    const unfulfilledOrders = orders.filter(order => order.fulfillment_status === null || order.fulfillment_status === 'unfulfilled').length;
+    
+    // Calculate fulfillment rate
+    const fulfillmentRate = totalOrders > 0 ? ((fulfilledOrders + partiallyFulfilledOrders) / totalOrders * 100) : 0;
+    
+    // Calculate total revenue
+    const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0);
+    
+    // Group orders by status
+    const orderStatuses = [
+      { status: 'Fulfilled', count: fulfilledOrders, percentage: totalOrders > 0 ? (fulfilledOrders / totalOrders * 100) : 0 },
+      { status: 'Partially Fulfilled', count: partiallyFulfilledOrders, percentage: totalOrders > 0 ? (partiallyFulfilledOrders / totalOrders * 100) : 0 },
+      { status: 'Unfulfilled', count: unfulfilledOrders, percentage: totalOrders > 0 ? (unfulfilledOrders / totalOrders * 100) : 0 }
+    ];
+    
+    // Group orders by financial status
+    const financialStatuses = {};
+    orders.forEach(order => {
+      const status = order.financial_status || 'unknown';
+      financialStatuses[status] = (financialStatuses[status] || 0) + 1;
+    });
+    
+    // Daily order trends
+    const dailyTrends = {};
+    orders.forEach(order => {
+      const date = new Date(order.created_at).toISOString().split('T')[0];
+      if (!dailyTrends[date]) {
+        dailyTrends[date] = { date, orders: 0, revenue: 0 };
+      }
+      dailyTrends[date].orders += 1;
+      dailyTrends[date].revenue += parseFloat(order.total_price || 0);
+    });
+    
+    const trends = Object.values(dailyTrends).sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    res.json({
+      success: true,
+      analytics: {
+        overview: {
+          totalOrders,
+          fulfilledOrders,
+          fulfillmentRate: Math.round(fulfillmentRate * 100) / 100,
+          totalRevenue: Math.round(totalRevenue * 100) / 100,
+          averageOrderValue: totalOrders > 0 ? Math.round((totalRevenue / totalOrders) * 100) / 100 : 0,
+          period: `${days} days`
+        },
+        orderStatuses,
+        financialStatuses: Object.entries(financialStatuses).map(([status, count]) => ({
+          status: status.charAt(0).toUpperCase() + status.slice(1),
+          count,
+          percentage: totalOrders > 0 ? Math.round((count / totalOrders * 100) * 100) / 100 : 0
+        })),
+        trends,
+        summary: {
+          period: `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
+          totalOrders,
+          totalRevenue,
+          fulfillmentRate
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error fetching analytics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch analytics data'
+    });
+  }
+});
+
+// Order lookup endpoint for customer tracking page
+app.post('/api/orders/lookup', async (req, res) => {
+  try {
+    const { order_number, contact_info } = req.body;
+    const { shop, accessToken } = getSessionFromRequest(req);
+    
+    if (!order_number || !contact_info) {
+      return res.status(400).json({
+        success: false,
+        error: 'Order number and contact information are required'
+      });
+    }
+    
+    if (!shop || !accessToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
+    }
+    
+    const result = await shopifyService.findOrderByNumberAndContact(
+      shop, 
+      accessToken, 
+      order_number, 
+      contact_info
+    );
+    
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(404).json(result);
+    }
+  } catch (error) {
+    console.error('❌ Error looking up order:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Get specific order details
+app.get('/api/orders/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { shop, accessToken } = getSessionFromRequest(req);
+    
+    if (!shop || !accessToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
+    }
+    
+    const result = await shopifyService.getOrderById(shop, accessToken, parseInt(orderId));
+    
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(404).json(result);
+    }
+  } catch (error) {
+    console.error('❌ Error fetching order details:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
 });
 
 // Settings endpoint
@@ -61,45 +240,191 @@ app.put('/api/settings', (req, res) => {
   });
 });
 
-// Orders endpoint
-app.get('/api/orders', (req, res) => {
-  res.json({
-    orders: [
-      {
-        id: '1001',
-        orderNumber: '#SO1001',
-        customerName: 'John Doe',
-        status: 'shipped',
-        trackingNumber: 'TRK123456789',
-        createdAt: '2024-01-15T10:00:00Z'
-      },
-      {
-        id: '1002',
-        orderNumber: '#SO1002',
-        customerName: 'Jane Smith',
-        status: 'processing',
-        trackingNumber: null,
-        createdAt: '2024-01-16T14:30:00Z'
-      }
-    ]
-  });
+// Import services
+const shopifyService = require('./services/shopifyService');
+const trackingService = require('./services/trackingService');
+
+// Enhanced tracking endpoint with real carrier APIs
+app.get('/api/tracking/enhanced/:carrier/:trackingNumber', async (req, res) => {
+  try {
+    const { carrier, trackingNumber } = req.params;
+    
+    if (!carrier || !trackingNumber) {
+      return res.status(400).json({
+        success: false,
+        error: 'Carrier and tracking number are required'
+      });
+    }
+    
+    console.log(`🚚 Fetching enhanced tracking for ${carrier}: ${trackingNumber}`);
+    
+    const trackingInfo = await trackingService.getTrackingInfo(carrier, trackingNumber);
+    
+    res.json({
+      success: trackingInfo.success,
+      tracking: trackingInfo,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching enhanced tracking:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch enhanced tracking information'
+    });
+  }
 });
 
-// Tracking endpoint
-app.get('/api/tracking/:orderNumber', (req, res) => {
-  const { orderNumber } = req.params;
-  res.json({
-    orderNumber,
-    status: 'shipped',
-    trackingNumber: 'TRK123456789',
-    estimatedDelivery: '2024-01-20',
-    trackingEvents: [
-      { date: '2024-01-15', status: 'Order placed', location: 'Online' },
-      { date: '2024-01-16', status: 'Processing', location: 'Warehouse' },
-      { date: '2024-01-17', status: 'Shipped', location: 'Distribution Center' },
-      { date: '2024-01-18', status: 'In transit', location: 'Local facility' }
-    ]
-  });
+// Get supported carriers endpoint
+app.get('/api/tracking/carriers', (req, res) => {
+  try {
+    const carriers = trackingService.getSupportedCarriers();
+    res.json({
+      success: true,
+      carriers: carriers
+    });
+  } catch (error) {
+    console.error('❌ Error fetching carriers:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch supported carriers'
+    });
+  }
+});
+
+// Helper function to extract session information from request
+function getSessionFromRequest(req) {
+  // Try to get from Shopify session first
+  if (req.session?.shop && req.session?.accessToken) {
+    return {
+      shop: req.session.shop,
+      accessToken: req.session.accessToken
+    };
+  }
+  
+  // Try to get from headers (for API calls)
+  const shop = req.headers['x-shopify-shop-domain'] || req.query.shop;
+  const accessToken = req.headers['x-shopify-access-token'] || req.query.access_token;
+  
+  if (shop && accessToken) {
+    return { shop, accessToken };
+  }
+  
+  // Try to get from Shopify app bridge session
+  if (req.session?.shopify) {
+    const session = req.session.shopify;
+    return {
+      shop: session.shop,
+      accessToken: session.accessToken
+    };
+  }
+  
+  // Fallback for development - use environment variables if available
+  return {
+    shop: process.env.SHOPIFY_SHOP_DOMAIN,
+    accessToken: process.env.SHOPIFY_ACCESS_TOKEN
+  };
+}
+
+// Orders endpoint - now using real Shopify API
+app.get('/api/orders', async (req, res) => {
+  try {
+    const { shop, accessToken } = getSessionFromRequest(req);
+    
+    if (!shop || !accessToken) {
+      console.log('⚠️ No valid Shopify session found, returning empty orders');
+      return res.json({ orders: [] });
+    }
+    
+    const options = {
+      limit: parseInt(req.query.limit) || 50,
+      status: req.query.status || 'any'
+    };
+    
+    const result = await shopifyService.getOrders(shop, accessToken, options);
+    
+    if (result.success) {
+      res.json({ orders: result.orders });
+    } else {
+      console.error('❌ Failed to fetch orders:', result.error);
+      res.json({ orders: [] });
+    }
+  } catch (error) {
+    console.error('❌ Error fetching orders:', error);
+    res.json({ orders: [] });
+  }
+});
+
+// Tracking endpoint - now using real Shopify API
+app.get('/api/tracking/:orderNumber', async (req, res) => {
+  try {
+    const { orderNumber } = req.params;
+    const { shop, accessToken } = getSessionFromRequest(req);
+    
+    if (!shop || !accessToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid Shopify session found'
+      });
+    }
+    
+    // Find order by order number
+    const result = await shopifyService.getOrders(shop, accessToken, {
+      name: orderNumber.replace(/^#/, ''),
+      limit: 1
+    });
+    
+    if (!result.success || !result.orders || result.orders.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found'
+      });
+    }
+    
+    const order = result.orders[0];
+    
+    // Get fulfillments for tracking information
+    const fulfillments = await shopifyService.getOrderFulfillments(shop, accessToken, order.id);
+    
+    // Enhanced tracking with real carrier data
+    let enhancedTracking = null;
+    if (fulfillments.length > 0 && fulfillments[0].tracking_number && fulfillments[0].tracking_company) {
+      try {
+        enhancedTracking = await trackingService.getTrackingInfo(
+          fulfillments[0].tracking_company,
+          fulfillments[0].tracking_number
+        );
+      } catch (error) {
+        console.log('⚠️ Enhanced tracking failed, using basic info:', error.message);
+      }
+    }
+    
+    res.json({
+      success: true,
+      orderNumber: order.name || order.order_number,
+      status: order.fulfillment_status || 'unfulfilled',
+      trackingNumber: fulfillments.length > 0 ? fulfillments[0].tracking_number : null,
+      trackingCompany: fulfillments.length > 0 ? fulfillments[0].tracking_company : null,
+      trackingUrl: fulfillments.length > 0 ? fulfillments[0].tracking_url : null,
+      fulfillments: fulfillments,
+      order: {
+        id: order.id,
+        created_at: order.created_at,
+        financial_status: order.financial_status,
+        fulfillment_status: order.fulfillment_status,
+        total_price: order.total_price,
+        currency: order.currency
+      },
+      // Enhanced tracking data from carrier APIs
+      enhancedTracking: enhancedTracking
+    });
+  } catch (error) {
+    console.error('❌ Error fetching tracking info:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch tracking information'
+    });
+  }
 });
 
 // Shopify OAuth routes

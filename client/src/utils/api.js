@@ -33,6 +33,8 @@ export const apiEndpoints = {
   tracking: {
     get: (trackingNumber) => `${API_BASE_URL}/tracking/${trackingNumber}`,
     update: (trackingNumber) => `${API_BASE_URL}/tracking/${trackingNumber}`,
+    enhanced: (carrier, trackingNumber) => `${API_BASE_URL}/tracking/enhanced/${encodeURIComponent(carrier)}/${encodeURIComponent(trackingNumber)}`,
+    carriers: () => `${API_BASE_URL}/tracking/carriers`,
   },
   
   // Health check
