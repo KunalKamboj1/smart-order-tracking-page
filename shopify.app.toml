@@ -1,0 +1,33 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "smart-order-tracking-page-builder"
+client_id = "{{ SHOPIFY_API_KEY }}"
+application_url = "https://{{ TUNNEL_URL }}"
+embedded = true
+
+[access_scopes]
+# https://shopify.dev/docs/api/usage/access-scopes
+scopes = "write_orders,read_orders,read_fulfillments,write_themes,read_themes,write_script_tags,read_script_tags,read_products,write_products"
+
+[auth]
+redirect_urls = [
+  "https://{{ TUNNEL_URL }}/auth/callback",
+  "https://{{ TUNNEL_URL }}/auth/shopify/callback",
+  "https://{{ TUNNEL_URL }}/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2023-10"
+
+[pos]
+embedded = false
+
+[[extensions]]
+type = "theme_app_extension"
+name = "tracking-page"
+handle = "tracking-page"
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "{{ DEV_STORE_URL }}"
+include_config_on_deploy = true

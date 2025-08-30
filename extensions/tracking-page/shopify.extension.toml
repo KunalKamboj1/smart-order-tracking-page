@@ -1,0 +1,110 @@
+# Learn more about configuring your theme app extension:
+# https://shopify.dev/docs/apps/online-store/theme-app-extensions/configuration
+
+api_version = "2023-10"
+
+[[extensions]]
+type = "theme_app_extension"
+name = "Smart Order Tracking"
+handle = "smart-order-tracking"
+
+[extensions.settings]
+[[extensions.settings.categories]]
+name = "Order Tracking"
+
+[[extensions.settings.categories.settings]]
+type = "header"
+content = "Tracking Page Settings"
+
+[[extensions.settings.categories.settings]]
+type = "checkbox"
+id = "enable_tracking_page"
+label = "Enable tracking page"
+default = true
+info = "Creates a dedicated order tracking page"
+
+[[extensions.settings.categories.settings]]
+type = "text"
+id = "page_title"
+label = "Page title"
+default = "Track Your Order"
+info = "The main heading displayed on the tracking page"
+
+[[extensions.settings.categories.settings]]
+type = "textarea"
+id = "not_dispatched_message"
+label = "Not dispatched message"
+default = "Your order has not been dispatched yet. We will notify you once it ships."
+info = "Message shown when order hasn't shipped yet"
+
+[[extensions.settings.categories.settings]]
+type = "textarea"
+id = "tracking_found_message"
+label = "Tracking found message"
+default = "Your tracking information:"
+info = "Message shown above tracking details"
+
+[[extensions.settings.categories.settings]]
+type = "header"
+content = "Additional Features"
+
+[[extensions.settings.categories.settings]]
+type = "checkbox"
+id = "show_recommended_products"
+label = "Show recommended products"
+default = false
+info = "Display product suggestions below tracking info"
+
+[[extensions.settings.categories.settings]]
+type = "number"
+id = "recommended_products_count"
+label = "Number of recommended products"
+default = 4
+min = 1
+max = 12
+info = "How many products to show in recommendations"
+
+[[extensions.settings.categories.settings]]
+type = "checkbox"
+id = "show_faq"
+label = "Show FAQ section"
+default = false
+info = "Include a frequently asked questions section"
+
+[[extensions.settings.categories.settings]]
+type = "textarea"
+id = "faq_content"
+label = "FAQ content"
+default = "**How long does shipping take?**\nShipping typically takes 3-7 business days.\n\n**Can I change my shipping address?**\nPlease contact us immediately if you need to change your address."
+info = "FAQ content in markdown format"
+
+[[extensions.settings.categories.settings]]
+type = "header"
+content = "Styling"
+
+[[extensions.settings.categories.settings]]
+type = "color"
+id = "primary_color"
+label = "Primary color"
+default = "#000000"
+info = "Main brand color for buttons and links"
+
+[[extensions.settings.categories.settings]]
+type = "color"
+id = "background_color"
+label = "Background color"
+default = "#ffffff"
+info = "Background color for the tracking form"
+
+[[extensions.settings.categories.settings]]
+type = "select"
+id = "border_radius"
+label = "Border radius"
+default = "medium"
+info = "Roundness of form elements"
+options = [
+  { value = "none", label = "None" },
+  { value = "small", label = "Small" },
+  { value = "medium", label = "Medium" },
+  { value = "large", label = "Large" }
+]
