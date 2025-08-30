@@ -310,7 +310,7 @@ app.get('/api/tracking/carriers', (req, res) => {
 });
 
 // Helper function to extract session information from request
-function getSessionFromRequest(req) {
+async function getSessionFromRequest(req) {
   // First try to get from Shopify app bridge session
   if (req.session?.shopify?.session) {
     const session = req.session.shopify.session;
@@ -352,75 +352,19 @@ function getSessionFromRequest(req) {
   };
 }
 
-// Demo orders data for development/testing
-const demoOrders = [
-  {
-    id: 5001234567890,
-    order_number: 1001,
-    name: '#1001',
-    email: 'customer@example.com',
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    financial_status: 'paid',
-    fulfillment_status: 'fulfilled',
-    total_price: '129.99',
-    currency: 'USD'
-  },
-  {
-    id: 5001234567891,
-    order_number: 1002,
-    name: '#1002',
-    email: 'john.doe@example.com',
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    financial_status: 'paid',
-    fulfillment_status: 'partial',
-    total_price: '89.50',
-    currency: 'USD'
-  },
-  {
-    id: 5001234567892,
-    order_number: 1003,
-    name: '#1003',
-    email: 'jane.smith@example.com',
-    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-    financial_status: 'paid',
-    fulfillment_status: null,
-    total_price: '199.99',
-    currency: 'USD'
-  },
-  {
-    id: 5001234567893,
-    order_number: 1004,
-    name: '#1004',
-    email: 'mike.wilson@example.com',
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    financial_status: 'paid',
-    fulfillment_status: 'fulfilled',
-    total_price: '75.25',
-    currency: 'USD'
-  },
-  {
-    id: 5001234567894,
-    order_number: 1005,
-    name: '#1005',
-    email: 'sarah.johnson@example.com',
-    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-    financial_status: 'pending',
-    fulfillment_status: null,
-    total_price: '45.00',
-    currency: 'USD'
-  }
-];
+
 
 // Orders endpoint - now using real Shopify API with demo fallback
 app.get('/api/orders', async (req, res) => {
   try {
-    const { shop, accessToken } = getSessionFromRequest(req);
+    const { shop, accessToken } = await getSessionFromRequest(req);
     
     if (!shop || !accessToken) {
       console.log('⚠️ No valid Shopify session found');
       return res.status(401).json({
         success: false,
-        error: 'No valid Shopify session found'
+        error: 'No valid Shopify session found',
+        redirectUrl: `/api/auth?shop=${req.query.shop || ''}`
       });
     }
     
@@ -447,12 +391,13 @@ app.get('/api/orders', async (req, res) => {
 app.get('/api/tracking/:orderNumber', async (req, res) => {
   try {
     const { orderNumber } = req.params;
-    const { shop, accessToken } = getSessionFromRequest(req);
+    const { shop, accessToken } = await getSessionFromRequest(req);
     
     if (!shop || !accessToken) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        error: 'No valid Shopify session found'
+        error: 'No valid Shopify session found',
+        redirectUrl: `/api/auth?shop=${req.query.shop || ''}`
       });
     }
     
