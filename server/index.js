@@ -5,7 +5,7 @@ const { SQLiteSessionStorage } = require('@shopify/shopify-app-session-storage-s
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const path = require('path');
+
 require('@shopify/shopify-api/adapters/node');
 require('dotenv').config({ path: '../.env.production' });
 
@@ -313,14 +313,8 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/tracking', require('./routes/tracking'));
 
-// Serve static files from client build
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('../client/build'));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build/index.html'));
-  });
-}
+// Note: Static files are served by Netlify in production
+// Frontend and backend are deployed separately
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
