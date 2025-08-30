@@ -23,23 +23,33 @@ const queryClient = new QueryClient({
 // Get app configuration from URL parameters or environment
 const getAppConfig = () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const host = urlParams.get('host');
-  const shop = urlParams.get('shop');
-  
-  // Store shop domain in localStorage when available
-  if (shop) {
+  let host = urlParams.get('host');
+  let shop = urlParams.get('shop');
+
+  // If shop is not in URL, try to get from localStorage
+  if (!shop) {
+    shop = localStorage.getItem('shopify-shop-domain') || '';
+  } else {
+    // Store shop domain in localStorage when available
     localStorage.setItem('shopify-shop-domain', shop);
   }
-  
+
+  // If host is not in URL, try to get from localStorage
+  if (!host) {
+    host = localStorage.getItem('shopify-host') || '';
+  } else {
+    localStorage.setItem('shopify-host', host);
+  }
+
   // Only return config if we have a valid Shopify host
   if (host) {
     return {
       apiKey: process.env.REACT_APP_SHOPIFY_API_KEY || '',
       host: host,
-      shop: shop || localStorage.getItem('shopify-shop-domain') || '',
+      shop: shop,
     };
   }
-  
+
   return null;
 };
 
