@@ -159,7 +159,8 @@ app.get('/api/orders', async (req, res) => {
       console.log('⚠️ No valid Shopify session found');
       return res.status(401).json({
         success: false,
-        error: 'No valid Shopify session found'
+        error: 'No valid Shopify session found',
+        redirectUrl: `/api/auth?shop=${req.query.shop || req.headers['x-shopify-shop-domain'] || ''}`
       });
     }
     
@@ -174,7 +175,11 @@ app.get('/api/orders', async (req, res) => {
       res.json({ orders: result.orders });
     } else {
       console.error('❌ Failed to fetch orders:', result.error);
-      res.json({ orders: demoOrders });
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch orders',
+        redirectUrl: `/api/auth?shop=${req.query.shop || ''}`
+      });
     }
   } catch (error) {
     console.error('❌ Error fetching orders:', error);
@@ -189,19 +194,14 @@ app.get('/api/analytics', async (req, res) => {
     const days = parseInt(req.query.days) || 30;
     
     if (!shop || !accessToken) {
-      console.log('⚠️ No valid Shopify session found, returning demo analytics');
-      return res.json({
-        success: true,
-        analytics: {
-          overview: {
-            totalOrders: demoOrders.length,
-            fulfilledOrders: demoOrders.filter(order => order.fulfillment_status === 'fulfilled').length,
-            partiallyFulfilledOrders: demoOrders.filter(order => order.fulfillment_status === 'partial').length,
-            unfulfilledOrders: demoOrders.filter(order => order.fulfillment_status === null || order.fulfillment_status === 'unfulfilled').length,
-            totalRevenue: demoOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0),
-            fulfillmentRate: 66.67,
-            averageOrderValue: 98.16,
-            period: `${days} days`
+      console.log('⚠️ No valid Shopify session found');
+      return res.status(401).json({
+        success: false,
+        error: 'No valid Shopify session found',
+        redirectUrl: `/api/auth?shop=${req.query.shop || req.headers['x-shopify-shop-domain'] || ''}`
+      });
+            
+            
           }
         }
       });

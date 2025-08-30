@@ -169,7 +169,7 @@ app.get('/api/analytics', async (req, res) => {
 app.post('/api/orders/lookup', async (req, res) => {
   try {
     const { order_number, contact_info } = req.body;
-    const { shop, accessToken } = getSessionFromRequest(req);
+    const { shop, accessToken } = await getSessionFromRequest(req, res);
     
     if (!order_number || !contact_info) {
       return res.status(400).json({
@@ -211,12 +211,13 @@ app.post('/api/orders/lookup', async (req, res) => {
 app.get('/api/orders/:orderId', async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { shop, accessToken } = getSessionFromRequest(req);
+    const { shop, accessToken } = await getSessionFromRequest(req, res);
     
     if (!shop || !accessToken) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        error: 'No valid Shopify session found'
+        error: 'No valid Shopify session found',
+        redirectUrl: `/api/auth?shop=${req.query.shop || ''}`
       });
     }
     
@@ -310,17 +311,25 @@ app.get('/api/tracking/carriers', (req, res) => {
 });
 
 // Helper function to extract session information from request
-async function getSessionFromRequest(req) {
-  // First try to get from Shopify app bridge session
-  if (req.session?.shopify?.session) {
-    const session = req.session.shopify.session;
+async function getSessionFromRequest(req, res) {
+  // Try to get from Shopify app session (res.locals is set by shopify middleware)
+  if (res?.locals?.shopify?.session) {
+    const session = res.locals.shopify.session;
     return {
       shop: session.shop,
       accessToken: session.accessToken
     };
   }
   
-  // Try to get from headers (for API calls)
+  // Try to get from request session
+  if (req.session?.shop && req.session?.accessToken) {
+    return {
+      shop: req.session.shop,
+      accessToken: req.session.accessToken
+    };
+  }
+  
+  // Try to get from headers
   const shop = req.headers['x-shopify-shop-domain'] || req.query.shop;
   const accessToken = req.headers['x-shopify-access-token'] || req.query.access_token;
   
@@ -328,7 +337,7 @@ async function getSessionFromRequest(req) {
     return { shop, accessToken };
   }
   
-  // Try to get from database if we have shop domain
+  // Try to get access token from database if we have shop domain
   if (shop) {
     try {
       const Database = require('./models/Database');
@@ -345,11 +354,7 @@ async function getSessionFromRequest(req) {
     }
   }
   
-  // Return null if no valid session found
-  return {
-    shop: null,
-    accessToken: null
-  };
+  return { shop: null, accessToken: null };
 }
 
 
@@ -357,14 +362,14 @@ async function getSessionFromRequest(req) {
 // Orders endpoint - now using real Shopify API with demo fallback
 app.get('/api/orders', async (req, res) => {
   try {
-    const { shop, accessToken } = await getSessionFromRequest(req);
+    const { shop, accessToken } = await getSessionFromRequest(req, res);
     
     if (!shop || !accessToken) {
       console.log('⚠️ No valid Shopify session found');
       return res.status(401).json({
         success: false,
         error: 'No valid Shopify session found',
-        redirectUrl: `/api/auth?shop=${req.query.shop || ''}`
+        redirectUrl: `/api/auth?shop=${req.query.shop || req.headers['x-shopify-shop-domain'] || ''}`
       });
     }
     
@@ -391,7 +396,7 @@ app.get('/api/orders', async (req, res) => {
 app.get('/api/tracking/:orderNumber', async (req, res) => {
   try {
     const { orderNumber } = req.params;
-    const { shop, accessToken } = await getSessionFromRequest(req);
+    const { shop, accessToken } = await getSessionFromRequest(req, res);
     
     if (!shop || !accessToken) {
       return res.status(401).json({
