@@ -7,7 +7,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 
 require('@shopify/shopify-api/adapters/node');
-require('dotenv').config({ path: '../.env.production' });
+require('dotenv').config({ path: process.env.NODE_ENV === 'production' ? '../.env.production' : '../.env' });
 
 const PORT = process.env.PORT || 3001;
 
