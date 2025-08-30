@@ -316,6 +316,11 @@ app.use('/api/tracking', require('./routes/tracking'));
 // Note: Static files are served by Netlify in production
 // Frontend and backend are deployed separately
 
+// Root route - redirect to Shopify auth
+app.get('/', (req, res) => {
+  res.redirect('/api/auth');
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
