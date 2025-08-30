@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 name = "smart-order-tracking-page-builder"
-client_id = "{{ SHOPIFY_API_KEY }}"
-application_url = "https://{{ TUNNEL_URL }}"
+client_id = "896734937b1d23f2d7e4191de83f41c6"
+application_url = "https://shopify-tracking-backend.onrender.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_orders,read_orders,read_fulfillments,write_themes,read_themes,wr
 
 [auth]
 redirect_urls = [
-  "https://{{ TUNNEL_URL }}/auth/callback",
-  "https://{{ TUNNEL_URL }}/auth/shopify/callback",
-  "https://{{ TUNNEL_URL }}/api/auth/callback"
+  "https://shopify-tracking-backend.onrender.com/auth/callback",
+  "https://shopify-tracking-backend.onrender.com/auth/shopify/callback",
+  "https://shopify-tracking-backend.onrender.com/api/auth/callback"
 ]
 
 [webhooks]
