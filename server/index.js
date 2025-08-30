@@ -183,7 +183,11 @@ app.get('/api/orders', async (req, res) => {
     }
   } catch (error) {
     console.error('❌ Error fetching orders:', error);
-    res.json({ orders: demoOrders });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch orders',
+      redirectUrl: `/api/auth?shop=${req.query.shop || ''}`
+    });
   }
 });
 
@@ -199,11 +203,6 @@ app.get('/api/analytics', async (req, res) => {
         success: false,
         error: 'No valid Shopify session found',
         redirectUrl: `/api/auth?shop=${req.query.shop || req.headers['x-shopify-shop-domain'] || ''}`
-      });
-            
-            
-          }
-        }
       });
     }
     
