@@ -311,11 +311,12 @@ app.get('/api/tracking/carriers', (req, res) => {
 
 // Helper function to extract session information from request
 function getSessionFromRequest(req) {
-  // Try to get from Shopify session first
-  if (req.session?.shop && req.session?.accessToken) {
+  // First try to get from Shopify app bridge session
+  if (req.session?.shopify?.session) {
+    const session = req.session.shopify.session;
     return {
-      shop: req.session.shop,
-      accessToken: req.session.accessToken
+      shop: session.shop,
+      accessToken: session.accessToken
     };
   }
   
@@ -327,16 +328,24 @@ function getSessionFromRequest(req) {
     return { shop, accessToken };
   }
   
-  // Try to get from Shopify app bridge session
-  if (req.session?.shopify) {
-    const session = req.session.shopify;
-    return {
-      shop: session.shop,
-      accessToken: session.accessToken
-    };
+  // Try to get from database if we have shop domain
+  if (shop) {
+    try {
+      const Database = require('./models/Database');
+      await Database.init();
+      const shopData = await Database.getShopData(shop);
+      if (shopData && shopData.access_token) {
+        return {
+          shop: shop,
+          accessToken: shopData.access_token
+        };
+      }
+    } catch (error) {
+      console.error('Error retrieving shop data from database:', error);
+    }
   }
   
-  // Return null if no valid session found - don't use env variables for API calls
+  // Return null if no valid session found
   return {
     shop: null,
     accessToken: null
@@ -556,7 +565,7 @@ app.get('/auth/callback', async (req, res) => {
     const tokenData = await tokenResponse.json();
     console.log('✅ Access token obtained for shop:', shop);
     
-    // Store access token in database
+    // Store access token in database and create session
     try {
       const Database = require('./models/Database');
       await Database.init();
@@ -564,7 +573,17 @@ app.get('/auth/callback', async (req, res) => {
         name: shop,
         email: null
       });
-      console.log('✅ Access token stored in database for shop:', shop);
+      
+      // Create session for the authenticated shop
+      req.session.shopify = {
+        session: {
+          shop: shop,
+          accessToken: tokenData.access_token,
+          scope: tokenData.scope
+        }
+      };
+      
+      console.log('✅ Access token stored and session created for shop:', shop);
     } catch (dbError) {
       console.error('❌ Error storing access token:', dbError);
     }

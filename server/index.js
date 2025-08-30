@@ -73,27 +73,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Apply Shopify middleware routes
-if (shopifyAppInstance && typeof shopifyAppInstance === 'object') {
-  // Apply auth middleware
-  app.use('/api/auth', shopifyAppInstance.auth.begin());
-  app.use('/api/auth/callback', shopifyAppInstance.auth.callback());
-  
-  // Apply webhook processing with empty handlers for now
-  app.use('/api/webhooks', shopifyAppInstance.processWebhooks({ webhookHandlers: {} }));
-  
-  // Apply session validation middleware conditionally
-  // Only validate authentication when shop parameter is provided
-  const conditionalAuth = (req, res, next) => {
-    const shop = req.query.shop || req.headers['x-shopify-shop-domain'];
-    if (shop) {
-      return shopifyAppInstance.validateAuthenticatedSession()(req, res, next);
-    }
-    next();
-  };
-  
-  app.use('/api/orders', conditionalAuth);
-  app.use('/api/analytics', conditionalAuth);
-}
+  if (shopifyAppInstance && typeof shopifyAppInstance === 'object') {
+    // Apply auth middleware
+    app.use('/api/auth', shopifyAppInstance.auth.begin());
+    app.use('/api/auth/callback', shopifyAppInstance.auth.callback());
+    
+    // Apply webhook processing with empty handlers for now
+    app.use('/api/webhooks', shopifyAppInstance.processWebhooks({ webhookHandlers: {} }));
+    
+    // Apply session validation middleware to all API routes
+    app.use('/api/*', shopifyAppInstance.validateAuthenticatedSession());
+    
+    // Ensure shop parameter is present for all API routes
+    app.use('/api/*', (req, res, next) => {
+      const shop = req.query.shop || req.headers['x-shopify-shop-domain'];
+      if (!shop) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Shop parameter is required' 
+        });
+      }
+      next();
+    });
+  }
 
 // Import services
 const shopifyService = require('./services/shopifyService');
